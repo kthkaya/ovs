@@ -6558,6 +6558,11 @@ do_xlate_actions(const struct ofpact *ofpacts, size_t ofpacts_len,
             break;
         }
 
+        case OFPACT_APPEND_TH:
+			VLOG_INFO("OFPACT_APPEND_TH: Last 2 of mac %x:%x",flow->dl_dst.ea[4],flow->dl_dst.ea[5]);
+			//append_th(flow, wc, ctx->xin->packet, ctx);
+			break;
+
         case OFPACT_CT:
             compose_conntrack_action(ctx, ofpact_get_CT(a), last);
             break;
