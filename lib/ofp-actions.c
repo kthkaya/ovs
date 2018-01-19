@@ -216,7 +216,7 @@ enum ofp_raw_action_type {
     OFPAT_RAW_PUSH_MPLS,
 
 	/* OF1.2-1.4(28): void. */
-	OFPAT_RAW12_APPEND_TH,
+	OFPAT_RAW12_PUSH_TH,
 
 	/* NX1.0(24), OF1.1+(20): ovs_be16.
      *
@@ -485,7 +485,7 @@ ofpact_next_flattened(const struct ofpact *ofpact)
     case OFPACT_NAT:
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
-    case OFPACT_APPEND_TH:
+    case OFPACT_PUSH_TH:
         return ofpact_next(ofpact);
 
     case OFPACT_CLONE:
@@ -4337,35 +4337,35 @@ format_DECAP(const struct ofpact_decap *a,
 }
 
 static enum ofperr
-decode_OFPAT_RAW12_APPEND_TH(struct ofpbuf *out)
+decode_OFPAT_RAW12_PUSH_TH(struct ofpbuf *out)
 {
-    ofpact_put_APPEND_TH(out)->ofpact.raw = OFPAT_RAW12_APPEND_TH;
+    ofpact_put_PUSH_TH(out)->ofpact.raw = OFPAT_RAW12_PUSH_TH;
     return 0;
 }
 
 static void
-encode_APPEND_TH(const struct ofpact_null *null OVS_UNUSED,
+encode_PUSH_TH(const struct ofpact_null *null OVS_UNUSED,
                   enum ofp_version ofp_version, struct ofpbuf *out)
 {
-          put_OFPAT12_APPEND_TH(out);
+          put_OFPAT12_PUSH_TH(out);
 }
 
 static char * OVS_WARN_UNUSED_RESULT
-parse_APPEND_TH(char *arg OVS_UNUSED,
+parse_PUSH_TH(char *arg OVS_UNUSED,
         const struct ofputil_port_map *port_map OVS_UNUSED,
         struct ofpbuf *ofpacts,
         enum ofputil_protocol *usable_protocols OVS_UNUSED)
 {
-    ofpact_put_APPEND_TH(ofpacts)->ofpact.raw = OFPAT_RAW12_APPEND_TH;
+    ofpact_put_PUSH_TH(ofpacts)->ofpact.raw = OFPAT_RAW12_PUSH_TH;
     return NULL;
 }
 
 static void
-format_APPEND_TH(const struct ofpact_null *a OVS_UNUSED,
+format_PUSH_TH(const struct ofpact_null *a OVS_UNUSED,
         const struct ofputil_port_map *port_map OVS_UNUSED,
         struct ds *s)
 {
-    ds_put_cstr(s, "append_th");
+    ds_put_cstr(s, "push_th");
 }
 
 
@@ -7152,7 +7152,7 @@ ofpact_is_set_or_move_action(const struct ofpact *a)
     case OFPACT_SET_VLAN_VID:
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
-    case OFPACT_APPEND_TH:
+    case OFPACT_PUSH_TH:
         return true;
     case OFPACT_BUNDLE:
     case OFPACT_CLEAR_ACTIONS:
@@ -7230,7 +7230,7 @@ ofpact_is_allowed_in_actions_set(const struct ofpact *a)
     case OFPACT_STRIP_VLAN:
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
-    case OFPACT_APPEND_TH:
+    case OFPACT_PUSH_TH:
         return true;
 
     /* In general these actions are excluded because they are not part of
@@ -7485,7 +7485,7 @@ ovs_instruction_type_from_ofpact_type(enum ofpact_type type)
     case OFPACT_NAT:
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
-    case OFPACT_APPEND_TH:
+    case OFPACT_PUSH_TH:
     default:
         return OVSINST_OFPIT11_APPLY_ACTIONS;
     }
@@ -8172,7 +8172,7 @@ ofpact_check__(enum ofputil_protocol *usable_protocols, struct ofpact *a,
         }
         return 0;
 
-    case OFPACT_APPEND_TH:
+    case OFPACT_PUSH_TH:
           return 0;
 
     default:
@@ -8536,7 +8536,7 @@ get_ofpact_map(enum ofp_version version)
         /* OF1.3+ OFPAT_PUSH_PBB (26) not supported. */
         /* OF1.3+ OFPAT_POP_PBB (27) not supported. */
         { 0, -1 },
-		{ OFPACT_APPEND_TH, 28 },
+		{ OFPACT_PUSH_TH, 28 },
     };
 
     switch (version) {
@@ -8671,7 +8671,7 @@ ofpact_outputs_to_port(const struct ofpact *ofpact, ofp_port_t port)
     case OFPACT_NAT:
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
-    case OFPACT_APPEND_TH:
+    case OFPACT_PUSH_TH:
     default:
         return false;
     }

@@ -370,6 +370,7 @@ enum ovs_key_attr {
 	/* Only used within userspace data path. */
 	OVS_KEY_ATTR_PACKET_TYPE,  /* be32 packet type */
 	OVS_KEY_ATTR_NSH,	   /* Nested set of ovs_nsh_key_* */
+	OVS_KEY_ATTR_TH,
 #endif
 
 	__OVS_KEY_ATTR_MAX
@@ -928,6 +929,7 @@ enum ovs_action_attr {
 	OVS_ACTION_ATTR_METER,         /* u32 meter number. */
 	OVS_ACTION_ATTR_PUSH_NSH,      /* Nested OVS_NSH_KEY_ATTR_*. */
 	OVS_ACTION_ATTR_POP_NSH,       /* No argument. */
+	OVS_ACTION_ATTR_PUSH_TH,	   /* No argument. */
 #endif
 	__OVS_ACTION_ATTR_MAX,	      /* Nothing past this will be accepted
 				       * from userspace. */

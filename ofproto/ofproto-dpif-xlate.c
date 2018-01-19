@@ -6558,8 +6558,9 @@ do_xlate_actions(const struct ofpact *ofpacts, size_t ofpacts_len,
             break;
         }
 
-        case OFPACT_APPEND_TH:
-			VLOG_INFO("OFPACT_APPEND_TH: Last 2 of mac %x:%x",flow->dl_dst.ea[4],flow->dl_dst.ea[5]);
+        case OFPACT_PUSH_TH:
+			VLOG_INFO("OFPACT_PUSH_TH: Last 2 of mac %x:%x",flow->dl_dst.ea[4],flow->dl_dst.ea[5]);
+			nl_msg_put_flag(ctx->odp_actions, OVS_ACTION_ATTR_PUSH_TH);
 			//append_th(flow, wc, ctx->xin->packet, ctx);
 			break;
 
