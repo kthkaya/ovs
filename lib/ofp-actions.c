@@ -215,8 +215,8 @@ enum ofp_raw_action_type {
      * [The argument is the Ethertype, e.g. ETH_TYPE_MPLS, not the label.] */
     OFPAT_RAW_PUSH_MPLS,
 
-	/* OF1.2-1.4(28): void. */
-	OFPAT_RAW12_PUSH_TH,
+	/* OF1.2-1.4(28): ovs_be16. */
+	OFPAT_RAW_PUSH_TH,
 
 	/* NX1.0(24), OF1.1+(20): ovs_be16.
      *
@@ -4336,36 +4336,51 @@ format_DECAP(const struct ofpact_decap *a,
     ds_put_format(s, "%s)%s", colors.paren, colors.end);
 }
 
+
+
 static enum ofperr
-decode_OFPAT_RAW12_PUSH_TH(struct ofpbuf *out)
+decode_OFPAT_RAW_PUSH_TH(uint16_t nextUID,
+						enum ofp_version ofp_version OVS_UNUSED,
+						struct ofpbuf *out)
 {
-    ofpact_put_PUSH_TH(out)->ofpact.raw = OFPAT_RAW12_PUSH_TH;
+    ofpact_put_PUSH_TH(out)->nextUID = nextUID;
     return 0;
 }
 
 static void
-encode_PUSH_TH(const struct ofpact_null *null OVS_UNUSED,
-                  enum ofp_version ofp_version, struct ofpbuf *out)
+encode_PUSH_TH(const struct ofpact_push_th *push_th,
+                  enum ofp_version ofp_version OVS_UNUSED,
+				  struct ofpbuf *out)
 {
-          put_OFPAT12_PUSH_TH(out);
+          put_OFPAT_PUSH_TH(out, push_th->nextUID);
 }
 
 static char * OVS_WARN_UNUSED_RESULT
-parse_PUSH_TH(char *arg OVS_UNUSED,
+parse_PUSH_TH(char *arg,
         const struct ofputil_port_map *port_map OVS_UNUSED,
         struct ofpbuf *ofpacts,
         enum ofputil_protocol *usable_protocols OVS_UNUSED)
 {
-    ofpact_put_PUSH_TH(ofpacts)->ofpact.raw = OFPAT_RAW12_PUSH_TH;
+    uint16_t nextUID;
+	char *error;
+
+
+    error = str_to_u16(arg,"push_th", &nextUID);
+
+    if (error) {
+    	return error;
+    }
+
+	ofpact_put_PUSH_TH(ofpacts)->nextUID = nextUID;
     return NULL;
 }
 
 static void
-format_PUSH_TH(const struct ofpact_null *a OVS_UNUSED,
+format_PUSH_TH(const struct ofpact_push_th *push_th,
         const struct ofputil_port_map *port_map OVS_UNUSED,
         struct ds *s)
 {
-    ds_put_cstr(s, "push_th");
+    ds_put_format(s, "%spush_th:%s%"PRIu16, colors.paren, colors.end, push_th->nextUID);
 }
 
 
@@ -8535,8 +8550,9 @@ get_ofpact_map(enum ofp_version version)
         { OFPACT_SET_FIELD, 25 },
         /* OF1.3+ OFPAT_PUSH_PBB (26) not supported. */
         /* OF1.3+ OFPAT_POP_PBB (27) not supported. */
-        { 0, -1 },
 		{ OFPACT_PUSH_TH, 28 },
+        { 0, -1 },
+
     };
 
     switch (version) {

@@ -6559,8 +6559,10 @@ do_xlate_actions(const struct ofpact *ofpacts, size_t ofpacts_len,
         }
 
         case OFPACT_PUSH_TH:
-			VLOG_INFO("OFPACT_PUSH_TH: Last 2 of mac %x:%x",flow->dl_dst.ea[4],flow->dl_dst.ea[5]);
-			nl_msg_put_flag(ctx->odp_actions, OVS_ACTION_ATTR_PUSH_TH);
+			VLOG_INFO("ofproto-dpif-xlate do_xlate_actions(): ofpact_get_PUSH_TH returned %"PRIu16,ofpact_get_PUSH_TH(a)->nextUID);
+			nl_msg_put_u16(ctx->odp_actions, OVS_ACTION_ATTR_PUSH_TH, ofpact_get_PUSH_TH(a)->nextUID);
+			//nl_msg_put_unspec(ctx->odp_actions, _VLAN, &vlan, sizeof vlan);
+
 			//append_th(flow, wc, ctx->xin->packet, ctx);
 			break;
 

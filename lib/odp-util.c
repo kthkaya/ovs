@@ -123,6 +123,7 @@ odp_action_len(uint16_t type)
     case OVS_ACTION_ATTR_CLONE: return ATTR_LEN_VARIABLE;
     case OVS_ACTION_ATTR_PUSH_NSH: return ATTR_LEN_VARIABLE;
     case OVS_ACTION_ATTR_POP_NSH: return 0;
+    case OVS_ACTION_ATTR_PUSH_TH: return sizeof(struct ovs_action_push_th);
 
     case OVS_ACTION_ATTR_UNSPEC:
     case __OVS_ACTION_ATTR_MAX:
@@ -170,6 +171,7 @@ ovs_key_attr_to_string(enum ovs_key_attr attr, char *namebuf, size_t bufsize)
     case OVS_KEY_ATTR_RECIRC_ID: return "recirc_id";
     case OVS_KEY_ATTR_PACKET_TYPE: return "packet_type";
     case OVS_KEY_ATTR_NSH: return "nsh";
+    case OVS_KEY_ATTR_TH: return "push_th";
 
     case __OVS_KEY_ATTR_MAX:
     default:
@@ -1067,6 +1069,13 @@ format_odp_action(struct ds *ds, const struct nlattr *a,
     case OVS_ACTION_ATTR_POP_NSH:
         ds_put_cstr(ds, "pop_nsh()");
         break;
+    case OVS_ACTION_ATTR_PUSH_TH: {
+     	 const struct ovs_action_push_th *ovsact_push_th = nl_attr_get(a);
+    	 ds_put_cstr(ds, "push_th(");
+    	 ds_put_format(ds, "nextUID=0x%04"PRIx16",", ntohs(ovsact_push_th->nextUID));
+    	 ds_put_char(ds, ')');
+            break;
+        }
     case OVS_ACTION_ATTR_UNSPEC:
     case __OVS_ACTION_ATTR_MAX:
     default:

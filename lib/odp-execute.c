@@ -35,6 +35,9 @@
 #include "unaligned.h"
 #include "util.h"
 #include "csum.h"
+#include "openvswitch/vlog.h"
+
+VLOG_DEFINE_THIS_MODULE(odp_execute);
 
 /* Masked copy of an ethernet address. 'src' is already properly masked. */
 static void
@@ -457,6 +460,11 @@ odp_execute_set_action(struct dp_packet *packet, const struct nlattr *a)
 	case OVS_KEY_ATTR_CT_ZONE:
 	case OVS_KEY_ATTR_CT_MARK:
 	case OVS_KEY_ATTR_CT_LABELS:
+
+	case OVS_KEY_ATTR_TH:
+		VLOG_INFO("odp-execute.c odp_execute_set_action(): OVS_KEY_ATTR_TH hit");
+		break;		
+
 	case __OVS_KEY_ATTR_MAX:
 	default:
 		OVS_NOT_REACHED();
@@ -581,6 +589,11 @@ odp_execute_masked_set_action(struct dp_packet *packet,
 	case OVS_KEY_ATTR_ICMPV6:
 	case OVS_KEY_ATTR_TCP_FLAGS:
 	case __OVS_KEY_ATTR_MAX:
+	
+	case OVS_KEY_ATTR_TH:
+		VLOG_INFO("odp-execute.c odp_execute_masked_set_action(): OVS_KEY_ATTR_TH hit");
+		break;		
+	
 	default:
 		OVS_NOT_REACHED();
 	}
@@ -888,10 +901,11 @@ odp_execute_actions(void *dp, struct dp_packet_batch *batch, bool steal,
 		}
 
 		case OVS_ACTION_ATTR_PUSH_TH: {
-
-			printf("OFPACT_PUSH_TH: Passing packet to push_th()");
+			VLOG_INFO("odp-execute.c odp_execute_actions():-----------------");
+			//printf("OFPACT_PUSH_TH: Passing packet to push_th()");
+			const struct ovs_action_push_th *ovsact_push_th = nl_attr_get(a);
 			DP_PACKET_BATCH_FOR_EACH (packet, batch) {
-				push_th(packet);
+				push_th(packet, ovsact_push_th->nextUID);
 			}
 			break;
 		}

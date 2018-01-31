@@ -484,10 +484,10 @@ pop_nsh(struct dp_packet *packet)
 }
 
 void
-push_th(struct dp_packet *b)
+push_th(struct dp_packet *b, ovs_be16 nextUID)
 {
 	VLOG_INFO("packets.c push_th():--------");
-
+	VLOG_INFO("packets.c push_th():Passed arg is %"PRIu16, nextUID);
 	struct eth_header *eh = dp_packet_eth(b);
 	if (!eh) {
 		return;
