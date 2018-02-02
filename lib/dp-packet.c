@@ -461,6 +461,21 @@ dp_packet_adjust_layer_offset(uint16_t *offset, int increment)
     }
 }
 
+void *
+dp_packet_resize_l4(struct dp_packet *b, int increment)
+{
+	if (increment >= 0) {
+		dp_packet_push_uninit(b, increment);
+	} else {
+		dp_packet_pull(b, -increment);
+	}
+
+	/* Adjust layer offsets */
+	dp_packet_adjust_layer_offset(&b->l4_ofs, increment);
+
+	return dp_packet_data(b);
+}
+
 /* Adjust the size of the l2_5 portion of the dp_packet, updating the l2
  * pointer and the layer offsets.  The caller is responsible for
  * modifying the contents. */

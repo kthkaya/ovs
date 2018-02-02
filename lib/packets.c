@@ -34,7 +34,9 @@
 #include "odp-util.h"
 #include "dp-packet.h"
 #include "unaligned.h"
+#include "openvswitch/vlog.h"
 
+VLOG_DEFINE_THIS_MODULE(packets);
 const struct in6_addr in6addr_exact = IN6ADDR_EXACT_INIT;
 const struct in6_addr in6addr_all_hosts = IN6ADDR_ALL_HOSTS_INIT;
 const struct in6_addr in6addr_all_routers = IN6ADDR_ALL_ROUTERS_INIT;
@@ -478,6 +480,51 @@ pop_nsh(struct dp_packet *packet)
         /* Packet must be recirculated for further processing. */
     }
     return true;
+}
+
+push_th(struct dp_packet *b, ovs_be16 nextUID)
+{
+	VLOG_INFO("packets.c push_th():--------");
+	VLOG_INFO("packets.c push_th():Passed arg is %"PRIu16, nextUID);
+	struct eth_header *eh = dp_packet_eth(b);
+	if (!eh) {
+		return;
+	} else	if (eth_type_ipv6(eh->eth_type)) {
+
+		char * header;
+		struct ip6_hdr *nh = dp_packet_l3(b);
+
+		if (nh->ip6_nxt == IPPROTO_TCP) {
+
+			VLOG_INFO("packets.c push_th():IPv6 Next Header before: %d",nh->ip6_nxt);
+			VLOG_INFO("packets.c push_th():IPv6 Packet length before: %"PRIu16,ntohs(nh->ip6_plen));
+
+			uint8_t buffer[8];
+			struct ip6_frag *fragHdr = ALIGNED_CAST(struct ip6_frag *, buffer);
+
+			fragHdr->ip6f_nxt = nh->ip6_nxt;
+			fragHdr->ip6f_reserved=0;
+			fragHdr->ip6f_ident = 1;
+			fragHdr->ip6f_offlg = 0;
+			nh->ip6_nxt = IPPROTO_FRAGMENT;
+
+			//Increment the v6 payload length by header size
+			nh->ip6_plen = nh->ip6_plen + htons(8);
+			VLOG_INFO("packets.c push_th():IPv6 Packet length after: %"PRIu16,ntohs(nh->ip6_plen));
+			//Insert the frag header into packet
+			size_t len;
+			len = b->l4_ofs;
+			VLOG_INFO("packets.c push_th():IPv6 l3 offset before: %d",b->l3_ofs);
+			VLOG_INFO("packets.c push_th():IPv6 l4 offset beforu: %d",len);
+			header = dp_packet_resize_l4(b, 8);
+			memmove(header, header + 8, len);
+			memcpy(header + len, fragHdr, 8);
+
+		}
+
+	} else if (!eth_type_arp(eh->eth_type)){
+		eh->eth_type = htons(ETH_TYPE_IPV6);
+	}
 }
 
 /* Converts hex digits in 'hex' to an Ethernet packet in '*packetp'.  The

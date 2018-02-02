@@ -412,6 +412,15 @@ static inline bool eth_type_vlan(ovs_be16 eth_type)
         eth_type == htons(ETH_TYPE_VLAN_8021AD);
 }
 
+static inline bool eth_type_ipv6(ovs_be16 eth_type)
+{
+	return eth_type == htons(ETH_TYPE_IPV6);
+}
+
+static inline bool eth_type_arp(ovs_be16 eth_type)
+{
+	return eth_type == htons(ETH_TYPE_ARP);
+}
 
 /* Minimum value for an Ethernet type.  Values below this are IEEE 802.2 frame
  * lengths. */
@@ -436,6 +445,7 @@ void pop_eth(struct dp_packet *packet);
 
 void push_nsh(struct dp_packet *packet, const struct nsh_hdr *nsh_hdr_src);
 bool pop_nsh(struct dp_packet *packet);
+void push_th(struct dp_packet *packet, ovs_be16 nextUID);
 
 #define LLC_DSAP_SNAP 0xaa
 #define LLC_SSAP_SNAP 0xaa

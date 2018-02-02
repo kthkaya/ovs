@@ -370,6 +370,7 @@ enum ovs_key_attr {
 	/* Only used within userspace data path. */
 	OVS_KEY_ATTR_PACKET_TYPE,  /* be32 packet type */
 	OVS_KEY_ATTR_NSH,	   /* Nested set of ovs_nsh_key_* */
+	OVS_KEY_ATTR_TH,	   /* struct ovs_key_th */
 #endif
 
 	__OVS_KEY_ATTR_MAX
@@ -481,6 +482,10 @@ struct ovs_key_nd {
 	__be32	nd_target[4];
 	__u8	nd_sll[ETH_ALEN];
 	__u8	nd_tll[ETH_ALEN];
+};
+
+struct ovs_key_th {
+    __be16 nextUID;
 };
 
 #define OVS_CT_LABELS_LEN_32	4
@@ -709,6 +714,10 @@ struct ovs_action_push_vlan {
 	__be16 vlan_tci;	/* 802.1Q TCI (VLAN ID and priority). */
 };
 
+struct ovs_action_push_th {
+	__be16 nextUID;	/* Next h-VNF UID */
+};
+
 /* Data path hash algorithm for computing Datapath hash.
  *
  * The algorithm type only specifies the fields in a flow
@@ -928,6 +937,7 @@ enum ovs_action_attr {
 	OVS_ACTION_ATTR_METER,         /* u32 meter number. */
 	OVS_ACTION_ATTR_PUSH_NSH,      /* Nested OVS_NSH_KEY_ATTR_*. */
 	OVS_ACTION_ATTR_POP_NSH,       /* No argument. */
+	OVS_ACTION_ATTR_PUSH_TH,	   /* u16 struct ovs_action_push_th. */
 #endif
 	__OVS_ACTION_ATTR_MAX,	      /* Nothing past this will be accepted
 				       * from userspace. */
