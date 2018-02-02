@@ -6557,6 +6557,10 @@ do_xlate_actions(const struct ofpact *ofpacts, size_t ofpacts_len,
             }
             break;
         }
+        case OFPACT_PUSH_TH:
+        	VLOG_INFO("ofproto-dpif-xlate do_xlate_actions(): ofpact_get_PUSH_TH returned %"PRIu16,ofpact_get_PUSH_TH(a)->nextUID);
+        	nl_msg_put_u16(ctx->odp_actions, OVS_ACTION_ATTR_PUSH_TH, ofpact_get_PUSH_TH(a)->nextUID);
+        	break;
 
         case OFPACT_CT:
             compose_conntrack_action(ctx, ofpact_get_CT(a), last);

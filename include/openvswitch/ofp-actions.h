@@ -93,6 +93,7 @@ struct vl_mff_map;
     OFPACT(DEC_MPLS_TTL,    ofpact_null,        ofpact, "dec_mpls_ttl") \
     OFPACT(PUSH_MPLS,       ofpact_push_mpls,   ofpact, "push_mpls")    \
     OFPACT(POP_MPLS,        ofpact_pop_mpls,    ofpact, "pop_mpls")     \
+	OFPACT(PUSH_TH, 		ofpact_push_th, 	ofpact, "push_th")		\
                                                                         \
     /* Generic encap & decap */                                         \
     OFPACT(ENCAP,           ofpact_encap,       props, "encap")         \
@@ -517,6 +518,14 @@ struct ofpact_push_mpls {
 struct ofpact_pop_mpls {
     struct ofpact ofpact;
     ovs_be16 ethertype;
+};
+
+/* OFPACT_PUSH_TH.
+ *
+ * Used for OFPAT12_PUSH_TH. */
+struct ofpact_push_th {
+    struct ofpact ofpact;
+    ovs_be16 nextUID;
 };
 
 /* OFPACT_SET_TUNNEL.
