@@ -41,6 +41,7 @@
 #include "unaligned.h"
 #include "util.h"
 #include "openvswitch/nsh.h"
+#include "openvswitch/trh.h"
 
 COVERAGE_DEFINE(flow_extract);
 COVERAGE_DEFINE(miniflow_malloc);
@@ -126,7 +127,7 @@ struct mf_ctx {
  * away.  Some GCC versions gave warnings on ALWAYS_INLINE, so these are
  * defined as macros. */
 
-#if (FLOW_WC_SEQ != 40)
+#if (FLOW_WC_SEQ != 41)
 #define MINIFLOW_ASSERT(X) ovs_assert(X)
 BUILD_MESSAGE("FLOW_WC_SEQ changed: miniflow_extract() will have runtime "
                "assertions enabled. Consider updating FLOW_WC_SEQ after "
@@ -454,7 +455,7 @@ invalid:
 }
 
 static inline bool
-parse_ipv6_ext_hdrs__(const void **datap, size_t *sizep, uint8_t *nw_proto,
+parse_ipv6_ext_hdrs__(struct mf_ctx *mf, const void **datap, size_t *sizep, uint8_t *nw_proto,
                       uint8_t *nw_frag)
 {
     while (1) {
@@ -462,7 +463,8 @@ parse_ipv6_ext_hdrs__(const void **datap, size_t *sizep, uint8_t *nw_proto,
                        && (*nw_proto != IPPROTO_ROUTING)
                        && (*nw_proto != IPPROTO_DSTOPTS)
                        && (*nw_proto != IPPROTO_AH)
-                       && (*nw_proto != IPPROTO_FRAGMENT))) {
+					   && (*nw_proto != IPPROTO_FRAGMENT)
+					   && (*nw_proto != IPPROTO_TRH))) {
             /* It's either a terminal header (e.g., TCP, UDP) or one we
              * don't understand.  In either case, we're done with the
              * packet, so use it to fill in 'nw_proto'. */
@@ -518,6 +520,13 @@ parse_ipv6_ext_hdrs__(const void **datap, size_t *sizep, uint8_t *nw_proto,
                     return true;
                 }
             }
+        } else if (*nw_proto == IPPROTO_TRH) {
+        	const struct trh_hdr *trh = (const struct trh_header *)
+        	                data_try_pull(datap, sizep, sizeof *trh);
+        	//struct mf_ctx derefmf = *mf;
+        	*nw_proto = trh->ip6t_nxt;
+        	miniflow_push_be32((*mf), ip6t_nxt_hvnf_uid, trh->ip6t_nxt_hvnf_uid__flags);
+        	return true;
         }
     }
 }
@@ -526,7 +535,7 @@ bool
 parse_ipv6_ext_hdrs(const void **datap, size_t *sizep, uint8_t *nw_proto,
                     uint8_t *nw_frag)
 {
-    return parse_ipv6_ext_hdrs__(datap, sizep, nw_proto, nw_frag);
+    return parse_ipv6_ext_hdrs__(NULL, datap, sizep, nw_proto, nw_frag);
 }
 
 bool
@@ -842,7 +851,7 @@ miniflow_extract(struct dp_packet *packet, struct miniflow *dst)
         nw_ttl = nh->ip6_hlim;
         nw_proto = nh->ip6_nxt;
 
-        if (!parse_ipv6_ext_hdrs__(&data, &size, &nw_proto, &nw_frag)) {
+        if (!parse_ipv6_ext_hdrs__(&mf, &data, &size, &nw_proto, &nw_frag)) {
             goto out;
         }
     } else {
@@ -1016,7 +1025,7 @@ flow_get_metadata(const struct flow *flow, struct match *flow_metadata)
 {
     int i;
 
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
 
     match_init_catchall(flow_metadata);
     if (flow->tunnel.tun_id != htonll(0)) {
@@ -1583,7 +1592,7 @@ flow_wildcards_init_for_packet(struct flow_wildcards *wc,
     memset(&wc->masks, 0x0, sizeof wc->masks);
 
     /* Update this function whenever struct flow changes. */
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
 
     if (flow_tnl_dst_is_set(&flow->tunnel)) {
         if (flow->tunnel.flags & FLOW_TNL_F_KEY) {
@@ -1730,7 +1739,7 @@ void
 flow_wc_map(const struct flow *flow, struct flowmap *map)
 {
     /* Update this function whenever struct flow changes. */
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
 
     flowmap_init(map);
 
@@ -1832,7 +1841,7 @@ void
 flow_wildcards_clear_non_packet_fields(struct flow_wildcards *wc)
 {
     /* Update this function whenever struct flow changes. */
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
 
     memset(&wc->masks.metadata, 0, sizeof wc->masks.metadata);
     memset(&wc->masks.regs, 0, sizeof wc->masks.regs);
@@ -1976,7 +1985,7 @@ flow_wildcards_set_xxreg_mask(struct flow_wildcards *wc, int idx,
 uint32_t
 miniflow_hash_5tuple(const struct miniflow *flow, uint32_t basis)
 {
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
     uint32_t hash = basis;
 
     if (flow) {
@@ -2023,7 +2032,7 @@ ASSERT_SEQUENTIAL(ipv6_src, ipv6_dst);
 uint32_t
 flow_hash_5tuple(const struct flow *flow, uint32_t basis)
 {
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
     uint32_t hash = basis;
 
     if (flow) {
@@ -2612,7 +2621,7 @@ flow_push_mpls(struct flow *flow, int n, ovs_be16 mpls_eth_type,
 
         if (clear_flow_L3) {
             /* Clear all L3 and L4 fields and dp_hash. */
-            BUILD_ASSERT(FLOW_WC_SEQ == 40);
+            BUILD_ASSERT(FLOW_WC_SEQ == 41);
             memset((char *) flow + FLOW_SEGMENT_2_ENDS_AT, 0,
                    sizeof(struct flow) - FLOW_SEGMENT_2_ENDS_AT);
             flow->dp_hash = 0;

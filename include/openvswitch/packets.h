@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include "openvswitch/tun-metadata.h"
+#include "openvswitch/trh.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -98,6 +99,26 @@ struct ovs_key_nsh {
 #define FLOW_NSH_F_CTX (1 << 1)
 
 #define FLOW_NSH_F_MASK ((1 << 2) - 1)
+
+// Treatment Header flow key
+
+struct flow_trh {
+	//uint8_t  ip6t_nxt;		/* next header.  */
+	//uint8_t  ip6t_len;		/* length in units of 8 octets.  */
+	//uint16_t ip6t_ver__opt; // Four bits ipt6t_ver, Twelve bits ip6t_opt
+	uint32_t ip6t_nxt_hvnf_uid__flags; //Twenty-four bits ip6t_nxt_hvnf_uid, Eight bits ip6t_flags
+	uint32_t pad;
+	//---------TR ID---------
+	/*
+	struct in6_addr ip6t_trid_src;      // source address
+	struct in6_addr ip6t_trid_dst;      // destination address
+	u_int16_t ip6t_trid_sport;		    // source port
+	u_int16_t ip6t_trid_dport;		    // destination port
+	*/
+	//---------NF TLVs-------
+	//struct hvnf_tlv[];
+	//ovs_be64 pad[1];
+};
 
 #ifdef __cplusplus
 }
