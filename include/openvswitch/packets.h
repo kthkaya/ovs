@@ -89,6 +89,12 @@ struct ovs_key_nsh {
 
 #define FLOW_NSH_F_MASK ((1 << 2) - 1)
 
+// Treatment Header flow key
+struct flow_trh {
+	ovs_be32 ip6trh_nextUID; //Twenty-four bits Next h-VNF UID plus Eight bits flags
+	uint32_t pad;
+};
+
 #ifdef __cplusplus
 }
 #endif

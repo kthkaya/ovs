@@ -1846,7 +1846,25 @@ enum OVS_PACKED_ENUM mf_field_id {
      * NXM: none.
      * OXM: NXOXM_NSH_TTL(10) since OF1.3 and v2.9.
      */
-    MFF_NSH_TTL,
+	MFF_NSH_TTL,
+
+/* ## ---- ## */
+/* ## TRH  ## */
+/* ## ---- ## */
+
+	/* "trh_nextuid".
+	 *
+	 * The twenty-four bits h-VNF UID and the eight bits flags fields.
+	 *
+	 * Type: be32.
+	 * Maskable: bitwise.
+	 * Formatting: hexadecimal.
+	 * Prerequisites: IPv6.
+	 * Access: read/write.
+	 * NXM: none.
+	 * OXM: OXM_TRH_NEXTUID(1) since OF1.2 and v2.8.
+	 */
+	MFF_TRH_NEXTUID,
 
     MFF_N_IDS
 };

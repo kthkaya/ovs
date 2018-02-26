@@ -363,6 +363,7 @@ enum ovs_key_attr {
 	OVS_KEY_ATTR_CT_ORIG_TUPLE_IPV4,   /* struct ovs_key_ct_tuple_ipv4 */
 	OVS_KEY_ATTR_CT_ORIG_TUPLE_IPV6,   /* struct ovs_key_ct_tuple_ipv6 */
 	OVS_KEY_ATTR_NSH,       /* Nested set of ovs_nsh_key_* */
+	OVS_KEY_ATTR_TRH,		/* be32 Next hNVF UID */
 
 #ifdef __KERNEL__
 	/* Only used within kernel data path. */
@@ -483,6 +484,10 @@ struct ovs_key_nd {
 	__be32	nd_target[4];
 	__u8	nd_sll[ETH_ALEN];
 	__u8	nd_tll[ETH_ALEN];
+};
+
+struct ovs_key_trh {
+	__be32 nextUID;
 };
 
 #define OVS_CT_LABELS_LEN_32	4

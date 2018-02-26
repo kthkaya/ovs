@@ -171,6 +171,7 @@ ovs_key_attr_to_string(enum ovs_key_attr attr, char *namebuf, size_t bufsize)
     case OVS_KEY_ATTR_RECIRC_ID: return "recirc_id";
     case OVS_KEY_ATTR_PACKET_TYPE: return "packet_type";
     case OVS_KEY_ATTR_NSH: return "nsh";
+    case OVS_KEY_ATTR_TRH: return "trh_nextuid";
 
     case __OVS_KEY_ATTR_MAX:
     default:
@@ -2411,6 +2412,7 @@ const struct attr_len_tbl ovs_flow_key_attr_lens[OVS_KEY_ATTR_MAX + 1] = {
     [OVS_KEY_ATTR_NSH]       = { .len = ATTR_LEN_NESTED,
                                  .next = ovs_nsh_key_attr_lens,
                                  .next_max = OVS_NSH_KEY_ATTR_MAX },
+    [OVS_KEY_ATTR_TRH] = { .len = 4  },
 };
 
 /* Returns the correct length of the payload for a flow key attribute of the
@@ -3862,6 +3864,20 @@ format_odp_key_attr__(const struct nlattr *a, const struct nlattr *ma,
         format_odp_nsh_attr(a, ma, ds);
         break;
     }
+
+    case OVS_KEY_ATTR_TRH: {
+    	const struct ovs_key_trh *mask = ma ? nl_attr_get(ma) : NULL;
+    	const struct ovs_key_trh *key = nl_attr_get(a);
+
+    	if (!mask) {
+    		ds_put_format(ds, ",trh_nextuid=%d", key->nextUID);
+    	} else {
+    		bool first = true;
+    		format_be32_masked(ds, &first, "trh_nextuid", key->nextUID, mask->nextUID);
+    	}
+    	break;
+    }
+
     case OVS_KEY_ATTR_UNSPEC:
     case __OVS_KEY_ATTR_MAX:
     default:
@@ -5240,6 +5256,8 @@ parse_odp_key_mask_attr(const char *s, const struct simap *port_names,
        s += ret;
     }
 
+    SCAN_SINGLE("trh_nextuid(", ovs_be32, be32, OVS_KEY_ATTR_TRH);
+
     /* Encap open-coded. */
     if (!strncmp(s, "encap(", 6)) {
         const char *start = s;
@@ -5587,6 +5605,13 @@ odp_flow_key_from_flow__(const struct odp_flow_key_parms *parms,
                 nd_key->nd_sll = data->arp_sha;
                 nd_key->nd_tll = data->arp_tha;
             }
+        } else if (flow->dl_type == htons(ETH_TYPE_IPV6)
+        		&& flow->nw_proto == IPPROTO_TRH) {
+        	struct ovs_key_trh *trh_key;
+
+        	trh_key = nl_msg_put_unspec_uninit(buf, OVS_KEY_ATTR_TRH,
+        			sizeof *trh_key);
+        	trh_key->nextUID = data->ip6trh_nextuid;
         }
     }
 

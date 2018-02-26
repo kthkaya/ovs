@@ -27,7 +27,7 @@ extern "C" {
 /* This sequence number should be incremented whenever anything involving flows
  * or the wildcarding of flows changes.  This will cause build assertion
  * failures in places which likely need to be updated. */
-#define FLOW_WC_SEQ 40
+#define FLOW_WC_SEQ 41
 
 /* Number of Open vSwitch extension 32-bit registers. */
 #define FLOW_N_REGS 16
@@ -141,11 +141,13 @@ struct flow {
     uint8_t nw_tos;             /* IP ToS (including DSCP and ECN). */
     uint8_t nw_ttl;             /* IP TTL/Hop Limit. */
     uint8_t nw_proto;           /* IP protocol or low 8 bits of ARP opcode. */
+    ovs_be32 ip6trh_nextuid;    /* IPv6 Treatment Header - Next h-VNF UID + Flags*/
+    ovs_be32 ip6trh_pad;		/* Pad OVS L3 block to 64 bits. */
     struct in6_addr nd_target;  /* IPv6 neighbor discovery (ND) target. */
     struct eth_addr arp_sha;    /* ARP/ND source hardware address. */
     struct eth_addr arp_tha;    /* ARP/ND target hardware address. */
     ovs_be16 tcp_flags;         /* TCP flags. With L3 to avoid matching L4. */
-    ovs_be16 pad2;              /* Pad to 64 bits. */
+    ovs_be16 pad2;           /* Pad to 64 bits. */
     struct ovs_key_nsh nsh;     /* Network Service Header keys */
 
     /* L4 (64-bit aligned) */
@@ -160,13 +162,14 @@ struct flow {
 BUILD_ASSERT_DECL(sizeof(struct flow) % sizeof(uint64_t) == 0);
 BUILD_ASSERT_DECL(sizeof(struct flow_tnl) % sizeof(uint64_t) == 0);
 BUILD_ASSERT_DECL(sizeof(struct ovs_key_nsh) % sizeof(uint64_t) == 0);
+//BUILD_ASSERT_DECL(sizeof(struct ovs_key_trh) % sizeof(uint64_t) == 0);
 
 #define FLOW_U64S (sizeof(struct flow) / sizeof(uint64_t))
 
 /* Remember to update FLOW_WC_SEQ when changing 'struct flow'. */
 BUILD_ASSERT_DECL(offsetof(struct flow, igmp_group_ip4) + sizeof(uint32_t)
-                  == sizeof(struct flow_tnl) + sizeof(struct ovs_key_nsh) + 300
-                  && FLOW_WC_SEQ == 40);
+                  == sizeof(struct flow_tnl) + sizeof(struct ovs_key_nsh) + sizeof(struct flow_trh) + 300
+                  && FLOW_WC_SEQ == 41);
 
 /* Incremental points at which flow classification may be performed in
  * segments.

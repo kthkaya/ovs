@@ -98,6 +98,7 @@ typedef UINT64 IP6UnitLength;
 #define IPPROTO_GRE             47              /* General Routing Encapsulation */
 #define IPPROTO_ESP             50              /* Encap. Security Payload */
 #define IPPROTO_AH              51              /* Authentication header */
+#define IPPROTO_TRH             144             /* Treatment header */
 #define IPPROTO_ICMPV6          58              /* ICMP for IPv6 */
 #define IPPROTO_NONE            59              /* No next header */
 #define IPPROTO_DSTOPTS         60              /* Destination options header */

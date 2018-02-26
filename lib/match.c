@@ -1303,7 +1303,7 @@ match_format(const struct match *match,
     bool is_megaflow = false;
     int i;
 
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
 
     if (priority != OFP_DEFAULT_PRIORITY) {
         ds_put_format(s, "%spriority=%s%d,",
@@ -1614,9 +1614,14 @@ match_format(const struct match *match,
                             &wc->masks.nd_target);
         format_eth_masked(s, "nd_sll", f->arp_sha, wc->masks.arp_sha);
         format_eth_masked(s, "nd_tll", f->arp_tha, wc->masks.arp_tha);
+    } else if (dl_type == htons(ETH_TYPE_IPV6) &&
+    		f->nw_proto == IPPROTO_TRH) {
+    	ds_put_format(s, "%sip6trh_nextuid=%s0x%05"PRIx32",",
+    			colors.param, colors.end,
+				ntohl(f->ip6trh_nextuid));
     } else {
-        format_be16_masked(s, "tp_src", f->tp_src, wc->masks.tp_src);
-        format_be16_masked(s, "tp_dst", f->tp_dst, wc->masks.tp_dst);
+    	format_be16_masked(s, "tp_src", f->tp_src, wc->masks.tp_src);
+    	format_be16_masked(s, "tp_dst", f->tp_dst, wc->masks.tp_dst);
     }
     if (is_ip_any(f) && f->nw_proto == IPPROTO_TCP && wc->masks.tcp_flags) {
         format_flags_masked(s, "tcp_flags", packet_tcp_flag_to_string,

@@ -378,6 +378,8 @@ mf_is_all_wild(const struct mf_field *mf, const struct flow_wildcards *wc)
     case MFF_NSH_C3:
     case MFF_NSH_C4:
         return !wc->masks.nsh.context[mf->id - MFF_NSH_C1];
+    case MFF_TRH_NEXTUID:
+       	return !wc->masks.ip6trh_nextuid;
 
     case MFF_N_IDS:
     default:
@@ -623,6 +625,7 @@ mf_is_value_valid(const struct mf_field *mf, const union mf_value *value)
     case MFF_NSH_C2:
     case MFF_NSH_C3:
     case MFF_NSH_C4:
+    case MFF_TRH_NEXTUID:
         return true;
 
     case MFF_N_IDS:
@@ -929,6 +932,9 @@ mf_get_value(const struct mf_field *mf, const struct flow *flow,
     case MFF_NSH_C4:
         value->be32 = flow->nsh.context[mf->id - MFF_NSH_C1];
         break;
+    case MFF_TRH_NEXTUID:
+    	value->be32 = flow->ip6trh_nextuid;
+    	break;
 
     case MFF_N_IDS:
     default:
@@ -1250,6 +1256,9 @@ mf_set_value(const struct mf_field *mf,
         MATCH_SET_FIELD_BE32(match, nsh.context[mf->id - MFF_NSH_C1],
                              value->be32);
         break;
+    case MFF_TRH_NEXTUID:
+    	MATCH_SET_FIELD_BE32(match, ip6trh_nextuid, value->be32);
+    	break;
 
     case MFF_N_IDS:
     default:
@@ -1644,6 +1653,9 @@ mf_set_flow_value(const struct mf_field *mf,
     case MFF_NSH_C4:
         flow->nsh.context[mf->id - MFF_NSH_C1] = value->be32;
         break;
+    case MFF_TRH_NEXTUID:
+    	flow->ip6trh_nextuid = value->be32;
+    	break;
 
     case MFF_N_IDS:
     default:
@@ -1781,6 +1793,7 @@ mf_is_pipeline_field(const struct mf_field *mf)
     case MFF_NSH_C2:
     case MFF_NSH_C3:
     case MFF_NSH_C4:
+    case MFF_TRH_NEXTUID:
         return false;
 
     case MFF_N_IDS:
@@ -2142,6 +2155,9 @@ mf_set_wild(const struct mf_field *mf, struct match *match, char **err_str)
         MATCH_SET_FIELD_MASKED(match, nsh.context[mf->id - MFF_NSH_C1],
                                htonl(0), htonl(0));
         break;
+    case MFF_TRH_NEXTUID:
+    	MATCH_SET_FIELD_MASKED(match, ip6trh_nextuid, 0, 0);
+    	break;
 
     case MFF_N_IDS:
     default:
@@ -2409,6 +2425,9 @@ mf_set(const struct mf_field *mf,
         MATCH_SET_FIELD_MASKED(match, nsh.context[mf->id - MFF_NSH_C1],
                                value->be32, mask->be32);
         break;
+    case MFF_TRH_NEXTUID:
+    	MATCH_SET_FIELD_MASKED(match, ip6trh_nextuid, value->be32, mask->be32);
+    	break;
 
     case MFF_N_IDS:
     default:
