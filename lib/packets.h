@@ -26,6 +26,7 @@
 #include "openvswitch/packets.h"
 #include "openvswitch/types.h"
 #include "openvswitch/nsh.h"
+#include "openvswitch/trh.h"
 #include "odp-netlink.h"
 #include "random.h"
 #include "hash.h"
@@ -441,6 +442,7 @@ void pop_eth(struct dp_packet *packet);
 
 void push_nsh(struct dp_packet *packet, const struct nsh_hdr *nsh_hdr_src);
 bool pop_nsh(struct dp_packet *packet);
+void push_trh(struct dp_packet *packet, const struct ip6_trhdr *trh);
 
 #define LLC_DSAP_SNAP 0xaa
 #define LLC_SSAP_SNAP 0xaa

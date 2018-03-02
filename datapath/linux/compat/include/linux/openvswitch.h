@@ -42,6 +42,7 @@
 
 #include <linux/types.h>
 #include <linux/if_ether.h>
+#include "openvswitch/trh.h"
 
 /**
  * struct ovs_header - header for OVS Generic Netlink messages.
@@ -363,6 +364,7 @@ enum ovs_key_attr {
 	OVS_KEY_ATTR_CT_ORIG_TUPLE_IPV4,   /* struct ovs_key_ct_tuple_ipv4 */
 	OVS_KEY_ATTR_CT_ORIG_TUPLE_IPV6,   /* struct ovs_key_ct_tuple_ipv6 */
 	OVS_KEY_ATTR_NSH,       /* Nested set of ovs_nsh_key_* */
+	OVS_KEY_ATTR_TRH,		/* struct ovs_key_trh */
 
 #ifdef __KERNEL__
 	/* Only used within kernel data path. */
@@ -547,6 +549,10 @@ struct ovs_key_ct_tuple_ipv6 {
 	__be16 src_port;
 	__be16 dst_port;
 	__u8   ipv6_proto;
+};
+
+struct ovs_key_trh {
+	__be32 ip6trh_nextuid_flags;
 };
 
 /**
@@ -810,6 +816,10 @@ struct ovs_action_push_eth {
 	struct ovs_key_ethernet addresses;
 };
 
+struct ovs_action_push_trh {
+	struct ip6_trhdr trh;	/* Treatment Header */
+};
+
 /**
  * enum ovs_nat_attr - Attributes for %OVS_CT_ATTR_NAT.
  *
@@ -926,6 +936,7 @@ enum ovs_action_attr {
 	OVS_ACTION_ATTR_CT_CLEAR,     /* No argument. */
 	OVS_ACTION_ATTR_PUSH_NSH,     /* Nested OVS_NSH_KEY_ATTR_*. */
 	OVS_ACTION_ATTR_POP_NSH,      /* No argument. */
+	OVS_ACTION_ATTR_PUSH_TRH,     /* struct ip6_trhdr. */
 
 #ifndef __KERNEL__
 	OVS_ACTION_ATTR_TUNNEL_PUSH,   /* struct ovs_action_push_tnl*/

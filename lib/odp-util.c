@@ -126,6 +126,7 @@ odp_action_len(uint16_t type)
     case OVS_ACTION_ATTR_POP_NSH: return 0;
 
     case OVS_ACTION_ATTR_UNSPEC:
+    case OVS_ACTION_ATTR_PUSH_TRH: return ATTR_LEN_VARIABLE;
     case __OVS_ACTION_ATTR_MAX:
         return ATTR_LEN_INVALID;
     }
@@ -171,6 +172,7 @@ ovs_key_attr_to_string(enum ovs_key_attr attr, char *namebuf, size_t bufsize)
     case OVS_KEY_ATTR_RECIRC_ID: return "recirc_id";
     case OVS_KEY_ATTR_PACKET_TYPE: return "packet_type";
     case OVS_KEY_ATTR_NSH: return "nsh";
+    case OVS_KEY_ATTR_TRH: return "trh";
 
     case __OVS_KEY_ATTR_MAX:
     default:
@@ -374,6 +376,32 @@ format_odp_push_nsh_action(struct ds *ds,
         OVS_NOT_REACHED();
     }
     ds_put_format(ds, ")");
+}
+
+static void
+format_odp_push_trh_action(struct ds *ds,
+                           const struct ip6_trhdr *trh)
+{
+	ds_put_cstr(ds, "push_trh(");
+	ds_put_format(ds, "version=%d", trh_get_ver(trh));
+	ds_put_format(ds, ",options=0x%"PRIx8, trh_get_opt(trh));
+	ds_put_format(ds, ",nextuid=0x%"PRIx32, trh_get_nextuid(trh));
+	ds_put_format(ds, ",flags=0x%"PRIx8, trh_get_flags(trh));
+	ds_put_format(ds, ",trid_src=" );
+	ds_put_format(ds, ",trid_dst=" );
+	ds_put_format(ds, ",trid_sport=");
+	ds_put_format(ds, ",trid_dport=");
+
+	/*
+	//If there are TLVs
+	if (ntohs(trh->ip6trh_len)>5){
+
+		trh_tlv_get_len(trh->tlvs[0].uid_len);
+		trh_tlv_get_uid(trh->tlvs[0].uid_len);
+
+	}
+	*/
+	ds_put_format(ds, ")");
 }
 
 static const char *
@@ -1149,6 +1177,13 @@ format_odp_action(struct ds *ds, const struct nlattr *a,
     case OVS_ACTION_ATTR_POP_NSH:
         ds_put_cstr(ds, "pop_nsh()");
         break;
+
+    case OVS_ACTION_ATTR_PUSH_TRH: {
+    	const struct ovs_action_push_trh *ovsact_push_trh = nl_attr_get(a);
+    	format_odp_push_trh_action(ds, &(ovsact_push_trh->trh));
+		break;
+    }
+
     case OVS_ACTION_ATTR_UNSPEC:
     case __OVS_ACTION_ATTR_MAX:
     default:
