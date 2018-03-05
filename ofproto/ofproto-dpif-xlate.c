@@ -6507,6 +6507,11 @@ do_xlate_actions(const struct ofpact *ofpacts, size_t ofpacts_len,
             break;
         }
 
+        case OFPACT_PUSH_TRH:{
+        	nl_msg_put(ctx->odp_actions, OVS_ACTION_ATTR_PUSH_TRH, ofpact_get_PUSH_TRH(a)->trh);
+        	break;
+        }
+
         case OFPACT_CT:
             compose_conntrack_action(ctx, ofpact_get_CT(a), last);
             break;

@@ -26,6 +26,7 @@
 #include "openvswitch/ofp-protocol.h"
 #include "openvswitch/types.h"
 #include "openvswitch/ofp-ed-props.h"
+#include "openvswitch/trh.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -94,6 +95,7 @@ struct vl_mff_map;
     OFPACT(PUSH_MPLS,       ofpact_push_mpls,   ofpact, "push_mpls")    \
     OFPACT(POP_MPLS,        ofpact_pop_mpls,    ofpact, "pop_mpls")     \
     OFPACT(DEC_NSH_TTL,     ofpact_null,        ofpact, "dec_nsh_ttl")  \
+	OFPACT(PUSH_TRH,        ofpact_push_trh,    trh, 	"push_trh")     \
                                                                         \
     /* Generic encap & decap */                                         \
     OFPACT(ENCAP,           ofpact_encap,       props, "encap")         \
@@ -519,6 +521,14 @@ struct ofpact_push_mpls {
 struct ofpact_pop_mpls {
     struct ofpact ofpact;
     ovs_be16 ethertype;
+};
+
+/* OFPACT_PUSH_TRH.
+ *
+ * Used for OFPAT12_PUSH_TRH. */
+struct ofpact_push_trh {
+	struct ofpact ofpact;
+	struct ip6_trhdr trh;
 };
 
 /* OFPACT_SET_TUNNEL.

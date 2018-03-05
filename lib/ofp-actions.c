@@ -239,6 +239,10 @@ enum ofp_raw_action_type {
 
     /* OF1.2-1.4(25): struct ofp12_action_set_field, ... VLMFF */
     OFPAT_RAW12_SET_FIELD,
+
+	/* OF1.2-1.4(28): struct ip6_trhdr. */
+	OFPAT_RAW_PUSH_TRH,
+
     /* OF1.5+(25): struct ofp12_action_set_field, ... VLMFF */
     OFPAT_RAW15_SET_FIELD,
     /* NX1.0-1.4(7): struct nx_action_reg_load. VLMFF
@@ -489,6 +493,7 @@ ofpact_next_flattened(const struct ofpact *ofpact)
     case OFPACT_NAT:
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
+    case OFPACT_PUSH_TRH:
     case OFPACT_DEC_NSH_TTL:
         return ofpact_next(ofpact);
 
@@ -4237,6 +4242,39 @@ format_DEC_NSH_TTL(const struct ofpact_null *a OVS_UNUSED,
     ds_put_format(fp->s, "%sdec_nsh_ttl%s", colors.special, colors.end);
 }
 
+static enum ofperr
+decode_OFPAT_RAW_PUSH_TRH(const struct ip6_trhdr *trh,
+						enum ofp_version ofp_version OVS_UNUSED,
+						struct ofpbuf *out)
+{
+    ofpact_put_PUSH_TRH(out)->trh = *trh;
+    return 0;
+}
+
+static void
+encode_PUSH_TRH(const struct ofpact_push_trh *push_trh,
+		enum ofp_version ofp_version OVS_UNUSED,
+		struct ofpbuf *out)
+{
+	put_OFPAT_PUSH_TRH(out, push_trh->trh);
+}
+
+static char * OVS_WARN_UNUSED_RESULT
+parse_PUSH_TRH(char *arg, const struct ofpact_parse_params *pp)
+{
+	//gotta parse arg here
+	struct ip6_trhdr *trh = NULL;
+	ofpact_put_PUSH_TRH(pp->ofpacts)->trh = *trh;
+	return NULL;
+}
+
+static void
+format_PUSH_TRH(const struct ofpact_push_trh *push_trh,
+				const struct ofpact_format_params *fp)
+{
+	ds_put_format(fp, "%strh_nextuid:%0x%"PRIu32, colors.paren, colors.end, ntohl(push_trh->trh.ip6trh_nextuid_flags));
+}
+
 
 /* Action structures for NXAST_RESUBMIT, NXAST_RESUBMIT_TABLE, and
  * NXAST_RESUBMIT_TABLE_CT.
@@ -6988,6 +7026,7 @@ ofpact_is_set_or_move_action(const struct ofpact *a)
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
     case OFPACT_DEC_NSH_TTL:
+    case OFPACT_PUSH_TRH:
         return true;
     case OFPACT_BUNDLE:
     case OFPACT_CLEAR_ACTIONS:
@@ -7067,6 +7106,7 @@ ofpact_is_allowed_in_actions_set(const struct ofpact *a)
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
     case OFPACT_DEC_NSH_TTL:
+    case OFPACT_PUSH_TRH:
         return true;
 
     /* In general these actions are excluded because they are not part of
@@ -7182,6 +7222,7 @@ ofpacts_execute_action_set(struct ofpbuf *action_list,
     ofpacts_copy_last(action_list, action_set, OFPACT_DEC_TTL);
     ofpacts_copy_last(action_list, action_set, OFPACT_DEC_MPLS_TTL);
     ofpacts_copy_last(action_list, action_set, OFPACT_DEC_NSH_TTL);
+    //ofpacts_copy_last(action_list, action_set, OFPACT_PUSH_TRH);
     ofpacts_copy_all(action_list, action_set, ofpact_is_set_or_move_action);
     ofpacts_copy_last(action_list, action_set, OFPACT_SET_QUEUE);
 
@@ -7326,6 +7367,7 @@ ovs_instruction_type_from_ofpact_type(enum ofpact_type type)
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
     case OFPACT_DEC_NSH_TTL:
+    case OFPACT_PUSH_TRH:
     default:
         return OVSINST_OFPIT11_APPLY_ACTIONS;
     }
@@ -8020,6 +8062,9 @@ ofpact_check__(enum ofputil_protocol *usable_protocols, struct ofpact *a,
         }
         return 0;
 
+    case OFPACT_PUSH_TRH:
+    	return 0;
+
     default:
         OVS_NOT_REACHED();
     }
@@ -8380,6 +8425,7 @@ get_ofpact_map(enum ofp_version version)
         { OFPACT_SET_FIELD, 25 },
         /* OF1.3+ OFPAT_PUSH_PBB (26) not supported. */
         /* OF1.3+ OFPAT_POP_PBB (27) not supported. */
+		{ OFPACT_PUSH_TRH, 28},
         { 0, -1 },
     };
 
@@ -8517,6 +8563,7 @@ ofpact_outputs_to_port(const struct ofpact *ofpact, ofp_port_t port)
     case OFPACT_ENCAP:
     case OFPACT_DECAP:
     case OFPACT_DEC_NSH_TTL:
+    case OFPACT_PUSH_TRH:
     default:
         return false;
     }
