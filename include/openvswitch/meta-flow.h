@@ -1862,7 +1862,7 @@ enum OVS_PACKED_ENUM mf_field_id {
 	 * Prerequisites: IPv6.
 	 * Access: read/write.
 	 * NXM: none.
-	 * OXM: OXM_TRH_NEXTUID(1) since OF1.2 and v2.8.
+	 * OXM: OXM_TRH_NEXTUID(45) since OF1.2 and v2.8.
 	 */
 	MFF_TRH_NEXTUID,
 

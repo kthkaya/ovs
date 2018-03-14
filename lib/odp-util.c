@@ -2823,6 +2823,7 @@ odp_mask_is_constant__(enum ovs_key_attr attr, const void *mask, size_t size,
     case OVS_KEY_ATTR_CT_LABELS:
     case OVS_KEY_ATTR_PACKET_TYPE:
     case OVS_KEY_ATTR_NSH:
+    case OVS_KEY_ATTR_TRH:
         return is_all_byte(mask, size, u8);
 
     case OVS_KEY_ATTR_TCP_FLAGS:
@@ -3866,6 +3867,7 @@ format_odp_key_attr__(const struct nlattr *a, const struct nlattr *ma,
     }
 
     case OVS_KEY_ATTR_TRH: {
+    	/*
     	const struct ovs_key_trh *mask = ma ? nl_attr_get(ma) : NULL;
     	const struct ovs_key_trh *key = nl_attr_get(a);
 
@@ -3874,6 +3876,10 @@ format_odp_key_attr__(const struct nlattr *a, const struct nlattr *ma,
     	} else {
     		bool first = true;
     		format_be32_masked(ds, &first, "trh_nextuid", key->nextUID, mask->nextUID);
+    	}*/
+    	ds_put_format(ds, "%#"PRIx32, nl_attr_get_u32(a));
+    	if (!is_exact) {
+    		ds_put_format(ds, "/%#"PRIx32, nl_attr_get_u32(ma));
     	}
     	break;
     }
@@ -5799,6 +5805,7 @@ odp_key_to_dp_packet(const struct nlattr *key, size_t key_len,
         case OVS_KEY_ATTR_MPLS:
         case OVS_KEY_ATTR_PACKET_TYPE:
         case OVS_KEY_ATTR_NSH:
+        case OVS_KEY_ATTR_TRH:
         case __OVS_KEY_ATTR_MAX:
         default:
             break;
@@ -6086,6 +6093,16 @@ parse_l2_5_onward(const struct nlattr *attrs[OVS_KEY_ATTR_MAX + 1],
                 check_start = ipv6_key;
                 check_len = sizeof *ipv6_key;
                 expected_bit = OVS_KEY_ATTR_IPV6;
+            }
+            if (present_attrs & (UINT64_C(1) << OVS_KEY_ATTR_TRH)) {
+            	/* XXX should we set 'expected_bit' here? */
+            	const struct ovs_key_trh * trh_key;
+
+            	trh_key = nl_attr_get(attrs[OVS_KEY_ATTR_TRH]);
+            	flow->ip6trh_nextuid = trh_key->nextUID;
+            	if (!is_mask) {
+            		expected_attrs |= UINT64_C(1) << OVS_KEY_ATTR_TRH;
+            	}
             }
         }
     } else if (src_flow->dl_type == htons(ETH_TYPE_ARP) ||

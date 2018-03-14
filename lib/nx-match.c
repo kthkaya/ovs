@@ -574,6 +574,11 @@ nx_pull_raw(const uint8_t *p, unsigned int match_len, bool strict,
         }
     }
 
+    /* Set 'nw_proto' directly, if IPv6 TRH is present. */
+    if (match->wc.masks.ip6trh_nextuid) {
+    	match_set_nw_proto(match, IPPROTO_TRH);
+    }
+
     match->flow.tunnel.metadata.tab = NULL;
     return 0;
 }
@@ -923,6 +928,10 @@ nxm_put_ip(struct nxm_put_ctx *ctx,
                      &flow->ipv6_src, &match->wc.masks.ipv6_src);
         nxm_put_ipv6(ctx, MFF_IPV6_DST, oxm,
                      &flow->ipv6_dst, &match->wc.masks.ipv6_dst);
+        if (match->wc.masks.ip6trh_nextuid) {
+        	nxm_put_32m(ctx, MFF_TRH_NEXTUID, oxm, flow->ip6trh_nextuid,
+        			match->wc.masks.ip6trh_nextuid);
+        }
     }
 
     nxm_put_frag(ctx, match, oxm);

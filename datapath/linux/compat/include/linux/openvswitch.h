@@ -363,7 +363,6 @@ enum ovs_key_attr {
 	OVS_KEY_ATTR_CT_ORIG_TUPLE_IPV4,   /* struct ovs_key_ct_tuple_ipv4 */
 	OVS_KEY_ATTR_CT_ORIG_TUPLE_IPV6,   /* struct ovs_key_ct_tuple_ipv6 */
 	OVS_KEY_ATTR_NSH,       /* Nested set of ovs_nsh_key_* */
-	OVS_KEY_ATTR_TRH,		/* be32 Next hNVF UID */
 
 #ifdef __KERNEL__
 	/* Only used within kernel data path. */
@@ -373,6 +372,7 @@ enum ovs_key_attr {
 #ifndef __KERNEL__
 	/* Only used within userspace data path. */
 	OVS_KEY_ATTR_PACKET_TYPE,  /* be32 packet type */
+	OVS_KEY_ATTR_TRH,		/* be32 Next hNVF UID */
 #endif
 
 	__OVS_KEY_ATTR_MAX

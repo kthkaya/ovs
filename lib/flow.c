@@ -1725,6 +1725,10 @@ flow_wildcards_init_for_packet(struct flow_wildcards *wc,
             WC_MASK_FIELD(wc, igmp_group_ip4);
         }
     }
+    /* Set wildcard for 'ip6trh_nextuid' if 'nw_proto' is IPPROTO_TRH */
+    if (flow->nw_proto == IPPROTO_TRH) {
+    	WC_MASK_FIELD(wc, ip6trh_nextuid);
+    }
 }
 
 /* Return a map of possible fields for a packet of the same type as 'flow'.
@@ -1794,6 +1798,7 @@ flow_wc_map(const struct flow *flow, struct flowmap *map)
         FLOWMAP_SET(map, ipv6_src);
         FLOWMAP_SET(map, ipv6_dst);
         FLOWMAP_SET(map, ipv6_label);
+        FLOWMAP_SET(map, ip6trh_nextuid);
         FLOWMAP_SET(map, nw_proto);
         FLOWMAP_SET(map, nw_frag);
         FLOWMAP_SET(map, nw_tos);

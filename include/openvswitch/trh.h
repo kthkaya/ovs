@@ -17,6 +17,8 @@ struct hvnf_tlv {
 	uint8_t vltp[]; //Variable Length Treatment Payload
 };
 #define TRH_STATIC_LEN 8 //Length of the part of the header that is non-variable-length (no TLVs)
+#define IPPROTO_TRH             144             /* Treatment header */
+
 struct trh_hdr {
 	uint8_t  ip6trh_nxt;		/* next header.  */
 	uint8_t  ip6trh_len;		/* length in units of 8 octets.  */

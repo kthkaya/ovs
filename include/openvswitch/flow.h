@@ -137,12 +137,12 @@ struct flow {
     struct in6_addr ct_ipv6_src; /* CT orig tuple IPv6 source address. */
     struct in6_addr ct_ipv6_dst; /* CT orig tuple IPv6 destination address. */
     ovs_be32 ipv6_label;        /* IPv6 flow label. */
+    ovs_be32 ip6trh_nextuid;    /* IPv6 Treatment Header - Next h-VNF UID + Flags*/
+	ovs_be32 ip6trh_pad;		/* Pad OVS L3 block to 64 bits. */
     uint8_t nw_frag;            /* FLOW_FRAG_* flags. */
     uint8_t nw_tos;             /* IP ToS (including DSCP and ECN). */
     uint8_t nw_ttl;             /* IP TTL/Hop Limit. */
     uint8_t nw_proto;           /* IP protocol or low 8 bits of ARP opcode. */
-    ovs_be32 ip6trh_nextuid;    /* IPv6 Treatment Header - Next h-VNF UID + Flags*/
-    ovs_be32 ip6trh_pad;		/* Pad OVS L3 block to 64 bits. */
     struct in6_addr nd_target;  /* IPv6 neighbor discovery (ND) target. */
     struct eth_addr arp_sha;    /* ARP/ND source hardware address. */
     struct eth_addr arp_tha;    /* ARP/ND target hardware address. */

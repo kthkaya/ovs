@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include "openvswitch/tun-metadata.h"
+#include "openvswitch/trh.h"
 
 #ifdef __cplusplus
 extern "C" {
