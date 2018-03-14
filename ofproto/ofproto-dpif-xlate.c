@@ -6508,7 +6508,9 @@ do_xlate_actions(const struct ofpact *ofpacts, size_t ofpacts_len,
         }
 
         case OFPACT_PUSH_TRH:{
-        	nl_msg_put(ctx->odp_actions, OVS_ACTION_ATTR_PUSH_TRH, ofpact_get_PUSH_TRH(a)->trh);
+        	struct ofpact_push_trh *ofp_push_trh = ofpact_get_PUSH_TRH(a);
+        	nl_msg_put_unspec(ctx->odp_actions, OVS_ACTION_ATTR_PUSH_TRH,
+        			&ofp_push_trh->trh, sizeof(ofp_push_trh->trh));
         	break;
         }
 

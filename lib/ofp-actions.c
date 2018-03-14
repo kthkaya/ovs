@@ -42,6 +42,7 @@
 #include "unaligned.h"
 #include "util.h"
 #include "vl-mff-map.h"
+#include "openvswitch/trh.h"
 
 VLOG_DEFINE_THIS_MODULE(ofp_actions);
 
@@ -240,10 +241,7 @@ enum ofp_raw_action_type {
     /* OF1.2-1.4(25): struct ofp12_action_set_field, ... VLMFF */
     OFPAT_RAW12_SET_FIELD,
 
-	/* OF1.2-1.4(28): struct ip6_trhdr. */
-	OFPAT_RAW_PUSH_TRH,
-
-    /* OF1.5+(25): struct ofp12_action_set_field, ... VLMFF */
+	/* OF1.5+(25): struct ofp12_action_set_field, ... VLMFF */
     OFPAT_RAW15_SET_FIELD,
     /* NX1.0-1.4(7): struct nx_action_reg_load. VLMFF
      *
@@ -262,6 +260,9 @@ enum ofp_raw_action_type {
     ONFACT_RAW13_COPY_FIELD,
     /* NX1.0-1.4(6): struct nx_action_reg_move, ... VLMFF */
     NXAST_RAW_REG_MOVE,
+
+    /* OF1.2-1.4(29): struct ofp_ip6_trhdr, ... */
+    OFPAT_RAW_PUSH_TRH,
 
 /* ## ------------------------- ## */
 /* ## Nicira extension actions. ## */
@@ -4241,13 +4242,22 @@ format_DEC_NSH_TTL(const struct ofpact_null *a OVS_UNUSED,
 {
     ds_put_format(fp->s, "%sdec_nsh_ttl%s", colors.special, colors.end);
 }
+/*  */
+struct ofp_ip6_trhdr {
+    ovs_be16 type;
+    ovs_be16 len;
+    struct ip6_trhdr ip6_trhdr;
+};
+/* XXX what is the exact size of struct ip6_trhdr */
+/* OFP_ASSERT(sizeof(struct ofp_ip6_trhdr) == (4 + 44 + sizeof(struct hvnf_tlv))); */
+BUILD_ASSERT_DECL(sizeof(struct ofp_ip6_trhdr) % sizeof(uint64_t) == 0);
 
 static enum ofperr
-decode_OFPAT_RAW_PUSH_TRH(const struct ip6_trhdr *trh,
+decode_OFPAT_RAW_PUSH_TRH(const struct ofp_ip6_trhdr *trh,
 						enum ofp_version ofp_version OVS_UNUSED,
 						struct ofpbuf *out)
 {
-    ofpact_put_PUSH_TRH(out)->trh = *trh;
+    ofpact_put_PUSH_TRH(out)->trh = trh->ip6_trhdr;
     return 0;
 }
 
@@ -4256,7 +4266,7 @@ encode_PUSH_TRH(const struct ofpact_push_trh *push_trh,
 		enum ofp_version ofp_version OVS_UNUSED,
 		struct ofpbuf *out)
 {
-	put_OFPAT_PUSH_TRH(out, push_trh->trh);
+	put_OFPAT_PUSH_TRH(out)->ip6_trhdr = push_trh->trh;
 }
 
 static char * OVS_WARN_UNUSED_RESULT
@@ -4272,7 +4282,9 @@ static void
 format_PUSH_TRH(const struct ofpact_push_trh *push_trh,
 				const struct ofpact_format_params *fp)
 {
-	ds_put_format(fp, "%strh_nextuid:%0x%"PRIu32, colors.paren, colors.end, ntohl(push_trh->trh.ip6trh_nextuid_flags));
+	//ds_put_format(fp, "%strh_nextuid:%0x%"PRIu32, colors.paren, colors.end, ntohl(push_trh->trh.ip6trh_nextuid_flags));
+	ds_put_format(fp->s, "trh_nextuid:%#"PRIu32,
+					  push_trh->trh.ip6trh_nextuid_flags);
 }
 
 
@@ -8425,7 +8437,7 @@ get_ofpact_map(enum ofp_version version)
         { OFPACT_SET_FIELD, 25 },
         /* OF1.3+ OFPAT_PUSH_PBB (26) not supported. */
         /* OF1.3+ OFPAT_POP_PBB (27) not supported. */
-		{ OFPACT_PUSH_TRH, 28},
+		{ OFPACT_PUSH_TRH, 29},
         { 0, -1 },
     };
 
