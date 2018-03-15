@@ -373,7 +373,7 @@ enum ovs_key_attr {
 #ifndef __KERNEL__
 	/* Only used within userspace data path. */
 	OVS_KEY_ATTR_PACKET_TYPE,  /* be32 packet type */
-	OVS_KEY_ATTR_TRH,		/* struct ovs_key_trh */
+	OVS_KEY_ATTR_TRH,		/* be32 nextuid_flags */
 #endif
 
 	__OVS_KEY_ATTR_MAX
@@ -816,6 +816,10 @@ struct ovs_action_push_eth {
 	struct ovs_key_ethernet addresses;
 };
 
+struct ovs_action_push_trh {
+	struct ip6_trhdr trh;	/* Treatment Header */
+};
+
 /**
  * enum ovs_nat_attr - Attributes for %OVS_CT_ATTR_NAT.
  *
@@ -932,6 +936,7 @@ enum ovs_action_attr {
 	OVS_ACTION_ATTR_CT_CLEAR,     /* No argument. */
 	OVS_ACTION_ATTR_PUSH_NSH,     /* Nested OVS_NSH_KEY_ATTR_*. */
 	OVS_ACTION_ATTR_POP_NSH,      /* No argument. */
+	OVS_ACTION_ATTR_PUSH_TRH,     /* struct ip6_trhdr. */
 
 #ifndef __KERNEL__
 	OVS_ACTION_ATTR_TUNNEL_PUSH,   /* struct ovs_action_push_tnl*/

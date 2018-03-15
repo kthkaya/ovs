@@ -480,6 +480,11 @@ pop_nsh(struct dp_packet *packet)
     return true;
 }
 
+void
+push_trh (struct dp_packet *packet, const struct ip6_trhdr *trh){
+
+}
+
 /* Converts hex digits in 'hex' to an Ethernet packet in '*packetp'.  The
  * caller must free '*packetp'.  On success, returns NULL.  On failure, returns
  * an error message and stores NULL in '*packetp'.

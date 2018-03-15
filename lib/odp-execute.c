@@ -459,6 +459,7 @@ odp_execute_set_action(struct dp_packet *packet, const struct nlattr *a)
     case OVS_KEY_ATTR_CT_ZONE:
     case OVS_KEY_ATTR_CT_MARK:
     case OVS_KEY_ATTR_CT_LABELS:
+    case OVS_KEY_ATTR_TRH:
     case __OVS_KEY_ATTR_MAX:
     default:
         OVS_NOT_REACHED();
@@ -566,6 +567,7 @@ odp_execute_masked_set_action(struct dp_packet *packet,
     case OVS_KEY_ATTR_ICMP:
     case OVS_KEY_ATTR_ICMPV6:
     case OVS_KEY_ATTR_TCP_FLAGS:
+    case OVS_KEY_ATTR_TRH:
     case __OVS_KEY_ATTR_MAX:
     default:
         OVS_NOT_REACHED();
@@ -873,6 +875,15 @@ odp_execute_actions(void *dp, struct dp_packet_batch *batch, bool steal,
             }
             break;
         }
+
+        case OVS_ACTION_ATTR_PUSH_TRH: {
+        	const struct ip6_trhdr *trh = nl_attr_get(a);
+        	DP_PACKET_BATCH_FOR_EACH (i, packet, batch) {
+        		push_trh(packet, &(trh));
+        	}
+        	break;
+        }
+
         case OVS_ACTION_ATTR_CT_CLEAR:
             DP_PACKET_BATCH_FOR_EACH (i, packet, batch) {
                 conntrack_clear(packet);

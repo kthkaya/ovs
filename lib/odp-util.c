@@ -124,6 +124,7 @@ odp_action_len(uint16_t type)
     case OVS_ACTION_ATTR_CLONE: return ATTR_LEN_VARIABLE;
     case OVS_ACTION_ATTR_PUSH_NSH: return ATTR_LEN_VARIABLE;
     case OVS_ACTION_ATTR_POP_NSH: return 0;
+    case OVS_ACTION_ATTR_PUSH_TRH: return ATTR_LEN_VARIABLE;
 
     case OVS_ACTION_ATTR_UNSPEC:
     case __OVS_ACTION_ATTR_MAX:
@@ -375,6 +376,32 @@ format_odp_push_nsh_action(struct ds *ds,
         OVS_NOT_REACHED();
     }
     ds_put_format(ds, ")");
+}
+
+static void
+format_odp_push_trh_action(struct ds *ds,
+		const struct ip6_trhdr *trh)
+{
+	ds_put_cstr(ds, "push_trh(");
+	ds_put_format(ds, "version=%d", trh_get_ver(trh));
+	ds_put_format(ds, ",options=0x%"PRIx8, trh_get_opt(trh));
+	ds_put_format(ds, ",nextuid=0x%"PRIx32, trh_get_nextuid(trh));
+	ds_put_format(ds, ",flags=0x%"PRIx8, trh_get_flags(trh));
+	ds_put_format(ds, ",trid_src=" );
+	ds_put_format(ds, ",trid_dst=" );
+	ds_put_format(ds, ",trid_sport=");
+	ds_put_format(ds, ",trid_dport=");
+
+	/*
+	//If there are TLVs
+	if (ntohs(trh->ip6trh_len)>5){
+
+		trh_tlv_get_len(trh->tlvs[0].uid_len);
+		trh_tlv_get_uid(trh->tlvs[0].uid_len);
+
+	}
+	 */
+	ds_put_format(ds, ")");
 }
 
 static const char *
@@ -1150,6 +1177,11 @@ format_odp_action(struct ds *ds, const struct nlattr *a,
     case OVS_ACTION_ATTR_POP_NSH:
         ds_put_cstr(ds, "pop_nsh()");
         break;
+    case OVS_ACTION_ATTR_PUSH_TRH: {
+    	const struct ip6_trhdr *trh = nl_attr_get(a);
+    	format_odp_push_trh_action(ds, &(trh));
+    	break;
+    }
     case OVS_ACTION_ATTR_UNSPEC:
     case __OVS_ACTION_ATTR_MAX:
     default:
