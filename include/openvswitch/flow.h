@@ -27,7 +27,7 @@ extern "C" {
 /* This sequence number should be incremented whenever anything involving flows
  * or the wildcarding of flows changes.  This will cause build assertion
  * failures in places which likely need to be updated. */
-#define FLOW_WC_SEQ 40
+#define FLOW_WC_SEQ 41
 
 /* Number of Open vSwitch extension 32-bit registers. */
 #define FLOW_N_REGS 16
@@ -137,6 +137,8 @@ struct flow {
     struct in6_addr ct_ipv6_src; /* CT orig tuple IPv6 source address. */
     struct in6_addr ct_ipv6_dst; /* CT orig tuple IPv6 destination address. */
     ovs_be32 ipv6_label;        /* IPv6 flow label. */
+    ovs_be32 ip6trh_nextuid;    /* IPv6 Treatment Header - Next h-VNF UID + Flags*/
+    ovs_be32 ip6trh_pad;		/* Pad OVS L3 block to 64 bits. */
     uint8_t nw_frag;            /* FLOW_FRAG_* flags. */
     uint8_t nw_tos;             /* IP ToS (including DSCP and ECN). */
     uint8_t nw_ttl;             /* IP TTL/Hop Limit. */
@@ -165,8 +167,8 @@ BUILD_ASSERT_DECL(sizeof(struct ovs_key_nsh) % sizeof(uint64_t) == 0);
 
 /* Remember to update FLOW_WC_SEQ when changing 'struct flow'. */
 BUILD_ASSERT_DECL(offsetof(struct flow, igmp_group_ip4) + sizeof(uint32_t)
-                  == sizeof(struct flow_tnl) + sizeof(struct ovs_key_nsh) + 300
-                  && FLOW_WC_SEQ == 40);
+                  == sizeof(struct flow_tnl) + sizeof(struct ovs_key_nsh) + sizeof(ovs_be32) + sizeof(ovs_be32) + 300
+                  && FLOW_WC_SEQ == 41);
 
 /* Incremental points at which flow classification may be performed in
  * segments.

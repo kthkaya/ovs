@@ -919,10 +919,14 @@ nxm_put_ip(struct nxm_put_ctx *ctx,
         nxm_put_32m(ctx, MFF_IPV4_DST, oxm,
                     flow->nw_dst, match->wc.masks.nw_dst);
     } else {
-        nxm_put_ipv6(ctx, MFF_IPV6_SRC, oxm,
-                     &flow->ipv6_src, &match->wc.masks.ipv6_src);
-        nxm_put_ipv6(ctx, MFF_IPV6_DST, oxm,
-                     &flow->ipv6_dst, &match->wc.masks.ipv6_dst);
+    	nxm_put_ipv6(ctx, MFF_IPV6_SRC, oxm,
+    			&flow->ipv6_src, &match->wc.masks.ipv6_src);
+    	nxm_put_ipv6(ctx, MFF_IPV6_DST, oxm,
+    			&flow->ipv6_dst, &match->wc.masks.ipv6_dst);
+    	if (match->wc.masks.ip6trh_nextuid) {
+    		nxm_put_32m(ctx, MFF_TRH_NEXTUID, oxm, flow->ip6trh_nextuid,
+    				match->wc.masks.ip6trh_nextuid);
+    	}
     }
 
     nxm_put_frag(ctx, match, oxm);
@@ -1026,7 +1030,7 @@ nx_put_raw(struct ofpbuf *b, enum ofp_version oxm, const struct match *match,
     ovs_be32 spi_mask;
     int match_len;
 
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
 
     struct nxm_put_ctx ctx = { .output = b, .implied_ethernet = false };
 

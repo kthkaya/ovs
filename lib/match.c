@@ -1018,6 +1018,14 @@ match_set_nd_target_masked(struct match *match,
     match->wc.masks.nd_target = *mask;
 }
 
+void
+match_set_ipv6_trh_masked(struct match *match, ovs_be32 ip6trh_nextuid,
+                            ovs_be32 mask)
+{
+    match->flow.ip6trh_nextuid = ip6trh_nextuid & mask;
+    match->wc.masks.ip6trh_nextuid = mask;
+}
+
 /* Returns true if 'a' and 'b' wildcard the same fields and have the same
  * values for fixed fields, otherwise false. */
 bool
@@ -1303,7 +1311,7 @@ match_format(const struct match *match,
     bool is_megaflow = false;
     int i;
 
-    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 40);
+    BUILD_ASSERT_DECL(FLOW_WC_SEQ == 41);
 
     if (priority != OFP_DEFAULT_PRIORITY) {
         ds_put_format(s, "%spriority=%s%d,",
@@ -1614,6 +1622,10 @@ match_format(const struct match *match,
                             &wc->masks.nd_target);
         format_eth_masked(s, "nd_sll", f->arp_sha, wc->masks.arp_sha);
         format_eth_masked(s, "nd_tll", f->arp_tha, wc->masks.arp_tha);
+    } else if (dl_type == htons(ETH_TYPE_IPV6) &&
+    		f->nw_proto == IPPROTO_TRH) {
+    	format_be32_masked_hex(s, "trh_nextuid", f->ip6trh_nextuid,
+    						   wc->masks.ip6trh_nextuid);
     } else {
         format_be16_masked(s, "tp_src", f->tp_src, wc->masks.tp_src);
         format_be16_masked(s, "tp_dst", f->tp_dst, wc->masks.tp_dst);

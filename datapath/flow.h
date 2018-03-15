@@ -36,6 +36,7 @@
 #include <net/ip_tunnels.h>
 #include <net/dst_metadata.h>
 #include <net/nsh.h>
+#include "openvswitch/trh.h"
 
 struct sk_buff;
 

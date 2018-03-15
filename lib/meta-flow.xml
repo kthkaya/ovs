@@ -731,6 +731,12 @@ tcp,tp_src=0x07c0/0xfff0
       Used by Open vSwitch for NSH extensions, in the absence of an official
       ONF-assigned class.  (This OUI is randomly generated.)
     </dd>
+    
+    <dt>0x144b0350 (<code>OXM_TRH</code>)</dt>
+    <dd>
+      Used by Open vSwitch for TRH extensions, in the absence of an official
+      ONF-assigned class.  (This OUI is randomly generated.)
+    </dd>   
   </dl>
 
   <p>
@@ -4508,6 +4514,14 @@ r r c c c.
 	   title="ICMPv6 Neighbor Discovery Source Ethernet Address"/>
     <field id="MFF_ND_TLL"
 	   title="ICMPv6 Neighbor Discovery Target Ethernet Address"/>
+  </group>
+
+  <group title="Treatment Header">
+	<field id="MFF_TRH_NEXTUID" title="TRH Next h-VNF UID">
+      <p>
+  	    There will be some description here sometime.
+      </p>
+  	</field>
   </group>
 
   <h1>References</h1>

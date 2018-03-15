@@ -171,6 +171,7 @@ ovs_key_attr_to_string(enum ovs_key_attr attr, char *namebuf, size_t bufsize)
     case OVS_KEY_ATTR_RECIRC_ID: return "recirc_id";
     case OVS_KEY_ATTR_PACKET_TYPE: return "packet_type";
     case OVS_KEY_ATTR_NSH: return "nsh";
+    case OVS_KEY_ATTR_TRH: return "trh_nextuid";
 
     case __OVS_KEY_ATTR_MAX:
     default:
@@ -2411,6 +2412,7 @@ const struct attr_len_tbl ovs_flow_key_attr_lens[OVS_KEY_ATTR_MAX + 1] = {
     [OVS_KEY_ATTR_NSH]       = { .len = ATTR_LEN_NESTED,
                                  .next = ovs_nsh_key_attr_lens,
                                  .next_max = OVS_NSH_KEY_ATTR_MAX },
+    [OVS_KEY_ATTR_TRH] = { .len = sizeof(struct ovs_key_trh)  },
 };
 
 /* Returns the correct length of the payload for a flow key attribute of the
@@ -2821,6 +2823,7 @@ odp_mask_is_constant__(enum ovs_key_attr attr, const void *mask, size_t size,
     case OVS_KEY_ATTR_CT_LABELS:
     case OVS_KEY_ATTR_PACKET_TYPE:
     case OVS_KEY_ATTR_NSH:
+    case OVS_KEY_ATTR_TRH:
         return is_all_byte(mask, size, u8);
 
     case OVS_KEY_ATTR_TCP_FLAGS:
@@ -3861,6 +3864,13 @@ format_odp_key_attr__(const struct nlattr *a, const struct nlattr *ma,
     case OVS_KEY_ATTR_NSH: {
         format_odp_nsh_attr(a, ma, ds);
         break;
+    }
+    case OVS_KEY_ATTR_TRH: {
+    	ds_put_format(ds, "%#"PRIx32, nl_attr_get_u32(a));
+    	if (!is_exact) {
+    		ds_put_format(ds, "/%#"PRIx32, nl_attr_get_u32(ma));
+    	}
+    	break;
     }
     case OVS_KEY_ATTR_UNSPEC:
     case __OVS_KEY_ATTR_MAX:
@@ -5240,6 +5250,9 @@ parse_odp_key_mask_attr(const char *s, const struct simap *port_names,
        s += ret;
     }
 
+    /* TRH */
+    SCAN_SINGLE("trh_nextuid(", ovs_be32, be32, OVS_KEY_ATTR_TRH);
+
     /* Encap open-coded. */
     if (!strncmp(s, "encap(", 6)) {
         const char *start = s;
@@ -5562,31 +5575,33 @@ odp_flow_key_from_flow__(const struct odp_flow_key_parms *parms,
                                                 sizeof *icmp_key);
             icmp_key->icmp_type = ntohs(data->tp_src);
             icmp_key->icmp_code = ntohs(data->tp_dst);
-        } else if (flow->dl_type == htons(ETH_TYPE_IPV6)
-                && flow->nw_proto == IPPROTO_ICMPV6) {
-            struct ovs_key_icmpv6 *icmpv6_key;
+        } else if (flow->dl_type == htons(ETH_TYPE_IPV6)) {
+        	if (flow->nw_proto == IPPROTO_ICMPV6) {
+        		struct ovs_key_icmpv6 *icmpv6_key;
+        		icmpv6_key = nl_msg_put_unspec_uninit(buf, OVS_KEY_ATTR_ICMPV6,
+        				sizeof *icmpv6_key);
+        		icmpv6_key->icmpv6_type = ntohs(data->tp_src);
+        		icmpv6_key->icmpv6_code = ntohs(data->tp_dst);
 
-            icmpv6_key = nl_msg_put_unspec_uninit(buf, OVS_KEY_ATTR_ICMPV6,
-                                                  sizeof *icmpv6_key);
-            icmpv6_key->icmpv6_type = ntohs(data->tp_src);
-            icmpv6_key->icmpv6_code = ntohs(data->tp_dst);
+        		if (is_nd(flow, NULL)
+        				/* Even though 'tp_src' and 'tp_dst' are 16 bits wide, ICMP
+        				 * type and code are 8 bits wide.  Therefore, an exact match
+        				 * looks like htons(0xff), not htons(0xffff).  See
+        				 * xlate_wc_finish() for details. */
+        				&& (!export_mask || (data->tp_src == htons(0xff)
+        						&& data->tp_dst == htons(0xff)))) {
 
-            if (is_nd(flow, NULL)
-                /* Even though 'tp_src' and 'tp_dst' are 16 bits wide, ICMP
-                 * type and code are 8 bits wide.  Therefore, an exact match
-                 * looks like htons(0xff), not htons(0xffff).  See
-                 * xlate_wc_finish() for details. */
-                && (!export_mask || (data->tp_src == htons(0xff)
-                                     && data->tp_dst == htons(0xff)))) {
+        			struct ovs_key_nd *nd_key;
 
-                struct ovs_key_nd *nd_key;
-
-                nd_key = nl_msg_put_unspec_uninit(buf, OVS_KEY_ATTR_ND,
-                                                    sizeof *nd_key);
-                nd_key->nd_target = data->nd_target;
-                nd_key->nd_sll = data->arp_sha;
-                nd_key->nd_tll = data->arp_tha;
-            }
+        			nd_key = nl_msg_put_unspec_uninit(buf, OVS_KEY_ATTR_ND,
+        					sizeof *nd_key);
+        			nd_key->nd_target = data->nd_target;
+        			nd_key->nd_sll = data->arp_sha;
+        			nd_key->nd_tll = data->arp_tha;
+        		}
+        	} else if (flow->nw_proto == IPPROTO_TRH) {
+        		nl_msg_put_be32(buf, OVS_KEY_ATTR_TRH, data->ip6trh_nextuid);
+        	}
         }
     }
 
@@ -5774,6 +5789,7 @@ odp_key_to_dp_packet(const struct nlattr *key, size_t key_len,
         case OVS_KEY_ATTR_MPLS:
         case OVS_KEY_ATTR_PACKET_TYPE:
         case OVS_KEY_ATTR_NSH:
+        case OVS_KEY_ATTR_TRH:
         case __OVS_KEY_ATTR_MAX:
         default:
             break;
@@ -6062,6 +6078,15 @@ parse_l2_5_onward(const struct nlattr *attrs[OVS_KEY_ATTR_MAX + 1],
                 check_len = sizeof *ipv6_key;
                 expected_bit = OVS_KEY_ATTR_IPV6;
             }
+        } else if (present_attrs & (UINT64_C(1) << OVS_KEY_ATTR_TRH)) {
+        	/* XXX should we set 'expected_bit' here? */
+        	const struct ovs_key_trh * trh_key;
+
+        	trh_key = nl_attr_get(attrs[OVS_KEY_ATTR_TRH]);
+        	flow->ip6trh_nextuid = trh_key->ip6trh_nextuid_flags;
+        	if (!is_mask) {
+        		expected_attrs |= UINT64_C(1) << OVS_KEY_ATTR_TRH;
+        	}
         }
     } else if (src_flow->dl_type == htons(ETH_TYPE_ARP) ||
                src_flow->dl_type == htons(ETH_TYPE_RARP)) {

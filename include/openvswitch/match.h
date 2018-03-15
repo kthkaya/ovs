@@ -20,6 +20,7 @@
 #include "openvswitch/flow.h"
 #include "openvswitch/packets.h"
 #include "openvswitch/tun-metadata.h"
+#include "openvswitch/trh.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -202,6 +203,7 @@ void match_set_ipv6_dst_masked(struct match *, const struct in6_addr *,
                                const struct in6_addr *);
 void match_set_ipv6_label(struct match *, ovs_be32);
 void match_set_ipv6_label_masked(struct match *, ovs_be32, ovs_be32);
+void match_set_ipv6_trh_masked(struct match *match, ovs_be32 ip6trh_nextuid, ovs_be32 mask);
 void match_set_nd_target(struct match *, const struct in6_addr *);
 void match_set_nd_target_masked(struct match *, const struct in6_addr *,
                                 const struct in6_addr *);
