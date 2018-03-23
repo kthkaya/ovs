@@ -516,8 +516,13 @@ push_th(struct dp_packet *b, ovs_be16 nextUID)
 			len = b->l4_ofs;
 			VLOG_INFO("packets.c push_th():IPv6 l3 offset before: %d",b->l3_ofs);
 			VLOG_INFO("packets.c push_th():IPv6 l4 offset beforu: %d",len);
+			//At this point, data in b starts at offset 0.
+			//Make 8 bytes space at the head of the buffer b.
 			header = dp_packet_resize_l4(b, 8);
+			//Now the data is at offset 8. Move the data between 8 and len (b->l4_ofs where l4 packet begins), which is the eth and network header, to offset 0 of b
+			//resize function also sets a new ofset for l4 data, which is oldOne+8
 			memmove(header, header + 8, len);
+			//Now we have the eth header + network header between 0 to len, and a free space between len and len+8. Copy the frag header to that free space
 			memcpy(header + len, fragHdr, 8);
 
 		}
